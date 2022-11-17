@@ -63,6 +63,12 @@ void Error_Handler(void);
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
 #define USART_RX_GPIO_Port GPIOA
+#define LED_Pin GPIO_PIN_5
+#define LED_GPIO_Port GPIOA
+#define Trig_Pin GPIO_PIN_8
+#define Trig_GPIO_Port GPIOA
+#define echo_Pin GPIO_PIN_9
+#define echo_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
