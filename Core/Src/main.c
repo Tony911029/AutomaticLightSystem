@@ -98,9 +98,15 @@ const uint32_t interval = 0.010; // this will be changed to match the clock
 uint32_t numTicks= 0; // 1 tick = 1 us
 
 // local array for mean vel calculation
-float xArray[interval*100]={};
+// how many entries do we want? how often do we calculate the velocity
+// if we calculate the instant displacement every 50000 ticks (0.05 seconds),
 
 
+
+// when adding a number into array, do we initialize everytime it is full?
+const intervalFactor = 12;
+float xArray[intervalFactor]={}; // 12 => every 0.6 seconds
+float velArray[intervalFactor-1]={}; // every 0.6 seconds we calculate velocity
 
 
 
@@ -421,9 +427,10 @@ float MeasureDistance(){
 
 // check which part is which and double check the algorithm
 // Do we need to calculate both at the same time or split into two function calls?
+int counter=0;
 void trigMeasurement(float preX, float curX, float preY, float curY){
 	// k is the distance between two sensors pair
-
+	//+++++++++++++++++++++++++++++++++++++++++++++
 	pre_data = -((preX*preX)-(preY*preY)-(k*k))/(preY*k);
 	delta = acos(pre_data);
 	preDistance = PreY*cos(delta);
@@ -436,25 +443,51 @@ void trigMeasurement(float preX, float curX, float preY, float curY){
 	// calculate delta x
 	deltaX = curDistance - preDistance;
 
+	//+++++++++++++++++++++++++++++++++++++++++++++
+	if (counter < intervalFactor){ // aka cap of array
+		xArray[counter]=deltaX;
+	}else{
+		counter ++; //reset after reaching max;
+	}
 	// this will update the global vel variable;
 	vel = deltaX/interval; //
 
 	curX = preX;
 	curY = preY;
+
+	counter++;
 }
 
 
 
 // this function will calculate the average velocity of an object over an interval
 void AveVel(float displacement){
-	numTicks++;
-	integral_x += displacement; // this will keep summing up the dx
-	if(numTicks>=interval){
-		aveVel=interal_x/interval;
-		numTicks=0;
+//	numTicks++;
+//	integral_x += displacement; // this will keep summing up the dx
+//	if(numTicks>=interval){
+//		aveVel=interal_x/interval;
+//		numTicks=0;
+//	}
+
+	for (int i=0;i<intervalFactor; i++){
+
+
+		//+++++++++++++++++++++++++++++++++++++++++++++
+		// Problem is that first time some entries are still at their default values
+		float velArray[i]=(Array[i+1]-Array[i])/interval; // this is the idea of derivative where lim(f(x+h)-f(x))/h as h which is our interval approaches 0
+
+		if (i==intervalFactor-1){
+			int totalVel=0;
+
+			for (int k=0;k<intervalFactor-1;k++){
+				totalVel+=VelArray[k]; // sum all the velocity
+				VelArray[k]=0; // no longer used
+
+				//+++++++++++++++++++++++++++++++++++++++++++++
+				aveVel = totalVel/(inteval*intervalFactor); // implementation of mean // do we need to multiply by a intervalFactor?
+			}
+		}
 	}
-
-
 }
 
 
