@@ -24,6 +24,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <math.h>.
 
 /* USER CODE END Includes */
 
@@ -67,13 +68,27 @@ static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
 void usDelay(uint32_t uSec);
+float MeasureDistance();
+void trigMeasurement(float preX, float curX, float preY, float curY);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+float k = 1.0; // distance between two sensors
 const float speedOfSound = 0.0343/2; // go and back
 float distance;
+
+
+float pre_data;
+float delta;
+float cur_data;
+float sigma;
+float preDistance;
+float curDistance;
+float deltaX;
+float Vel;
+
 /* USER CODE END 0 */
 
 /**
@@ -126,29 +141,7 @@ int main(void)
 
   while (1)
   {
-	  HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_RESET);
-	  usDelay(3);
 
-	  HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_SET); // send out the signal for 10 microsecond
-	  usDelay(10);
-	  HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_RESET); // turn of the trigger pin
-
-
-	  //Wait till receiving the echo
-	  while(HAL_GPIO_ReadPin(ECHO_GPIO_Port, ECHO_Pin)== GPIO_PIN_RESET);
-
-	  numTicks = 0;
-	  while(HAL_GPIO_ReadPin(ECHO_GPIO_Port, ECHO_Pin)== GPIO_PIN_SET){
-		  numTicks++;
-		  usDelay(2); // actually 2.8 us
-	  };
-
-	  distance = (numTicks + 0.0f)*2.8*speedOfSound; // speedOfSound is already divided by 2
-
-
-
-	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	  HAL_Delay(1000); // measure every 1 second
 
 
 
@@ -379,6 +372,58 @@ void usDelay(uint32_t uSec){
 	while((usTIM->SR&0x0001) != 1);
 	usTIM->SR &= ~(0x0001);
 }
+
+float MeasureDistance(){
+	  HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_RESET);
+	  usDelay(3);
+
+	  HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_SET); // send out the signal for 10 microsecond
+	  usDelay(10);
+	  HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_RESET); // turn of the trigger pin
+
+
+	  //Wait till receiving the echo
+	  while(HAL_GPIO_ReadPin(ECHO_GPIO_Port, ECHO_Pin)== GPIO_PIN_RESET);
+
+	  numTicks = 0;
+	  while(HAL_GPIO_ReadPin(ECHO_GPIO_Port, ECHO_Pin)== GPIO_PIN_SET){
+		  numTicks++;
+		  usDelay(2); // actually 2.8 us
+	  };
+
+	  distance = (numTicks + 0.0f)*2.8*speedOfSound; // speedOfSound is already divided by 2
+
+	  return distance;
+}
+
+
+//// Description
+// This function will calculate the speed of the object using cosine law
+// It takes 4 parameters from MeasureDistance function: preX, curX, preY, curY
+// X is the measurement of sensor 1 from the door
+// Y is the measurement of sensor 2 on the wall
+
+// check which part is which and double check the algorithm
+// Do we need to calculate both at the same time or split into two function calls?
+void trigMeasurement(float preX, float curX, float preY, float curY){
+	pre_data = -((preX*preX)-(preY*preY)-(k*k))/(preY*k);
+	delta = acos(pre_data);
+	preDistance = PreY*cos(delta);
+
+
+	cur_data = -((curX*curX)-(curY*curY)-(k*k))/(curY*k);
+	sigma = acos(cur_data);
+	curDistance = CurY*cos(sigma);
+
+	// calculate delta x
+	deltaX = curDistance - preDistance;
+	// 0.25 has to be change to a variable to match the clock speed
+	Vel = deltaX/0.25;
+
+	curX = preX;
+	curY = preY;
+}
+
 
 /* USER CODE END 4 */
 
