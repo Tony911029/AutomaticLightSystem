@@ -24,7 +24,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <math.h>.
+#include <math.h>
 
 /* USER CODE END Includes */
 
@@ -97,17 +97,13 @@ float aveVel;
 const uint32_t interval = 0.010; // this will be changed to match the clock
 uint32_t numTicks= 0; // 1 tick = 1 us
 
+
+// when adding a number into array, do we initialize everytime it is full?
+const int intervalFactor = 12;
+
 // local array for mean vel calculation
 // how many entries do we want? how often do we calculate the velocity
 // if we calculate the instant displacement every 50000 ticks (0.05 seconds),
-
-
-
-// when adding a number into array, do we initialize everytime it is full?
-const intervalFactor = 12;
-float xArray[intervalFactor]={}; // 12 => every 0.6 seconds
-float velArray[intervalFactor-1]={}; // every 0.6 seconds we calculate velocity
-
 
 
 
@@ -121,6 +117,11 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
+	// +++++++++++++++++++++++++++
+	// move this code to initialize state
+	const int intervalFactor = 12;
+	float xArray[intervalFactor]={}; // 12 => every 0.6 seconds
+	float velArray[intervalFactor-1]={}; // every 0.6 seconds we calculate velocity
 
   /* USER CODE END 1 */
 
@@ -433,12 +434,12 @@ void trigMeasurement(float preX, float curX, float preY, float curY){
 	//+++++++++++++++++++++++++++++++++++++++++++++
 	pre_data = -((preX*preX)-(preY*preY)-(k*k))/(preY*k);
 	delta = acos(pre_data);
-	preDistance = PreY*cos(delta);
+	preDistance = preY*cos(delta);
 
 
 	cur_data = -((curX*curX)-(curY*curY)-(k*k))/(curY*k);
 	sigma = acos(cur_data);
-	curDistance = CurY*cos(sigma);
+	curDistance = curY*cos(sigma);
 
 	// calculate delta x
 	deltaX = curDistance - preDistance;
@@ -474,17 +475,17 @@ void AveVel(float displacement){
 
 		//+++++++++++++++++++++++++++++++++++++++++++++
 		// Problem is that first time some entries are still at their default values
-		float velArray[i]=(Array[i+1]-Array[i])/interval; // this is the idea of derivative where lim(f(x+h)-f(x))/h as h which is our interval approaches 0
+		float velArray[i]=(xArray[i+1]-xArray[i])/interval; // this is the idea of derivative where lim(f(x+h)-f(x))/h as h which is our interval approaches 0
 
 		if (i==intervalFactor-1){
 			int totalVel=0;
 
 			for (int k=0;k<intervalFactor-1;k++){
-				totalVel+=VelArray[k]; // sum all the velocity
-				VelArray[k]=0; // no longer used
+				totalVel+=velArray[k]; // sum all the velocity
+				velArray[k]=0; // no longer used
 
 				//+++++++++++++++++++++++++++++++++++++++++++++
-				aveVel = totalVel/(inteval*intervalFactor); // implementation of mean // do we need to multiply by a intervalFactor?
+				aveVel = totalVel/(interval*intervalFactor); // implementation of mean // do we need to multiply by a intervalFactor?
 			}
 		}
 	}
