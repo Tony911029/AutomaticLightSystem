@@ -70,6 +70,7 @@ static void MX_TIM4_Init(void);
 void usDelay(uint32_t uSec);
 float MeasureDistance();
 void trigMeasurement(float preX, float curX, float preY, float curY);
+void AveVel(float displacement);
 
 /* USER CODE END PFP */
 
@@ -86,8 +87,23 @@ float cur_data;
 float sigma;
 float preDistance;
 float curDistance;
+float integral_x;
 float deltaX;
-float Vel;
+float vel;
+float aveVel;
+
+
+// use one of the following
+const uint32_t interval = 0.010; // this will be changed to match the clock
+uint32_t numTicks= 0; // 1 tick = 1 us
+
+// local array for mean vel calculation
+float xArray[interval*100]={};
+
+
+
+
+
 
 /* USER CODE END 0 */
 
@@ -98,7 +114,7 @@ float Vel;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint32_t numTicks= 0;
+
 
   /* USER CODE END 1 */
 
@@ -406,6 +422,8 @@ float MeasureDistance(){
 // check which part is which and double check the algorithm
 // Do we need to calculate both at the same time or split into two function calls?
 void trigMeasurement(float preX, float curX, float preY, float curY){
+	// k is the distance between two sensors pair
+
 	pre_data = -((preX*preX)-(preY*preY)-(k*k))/(preY*k);
 	delta = acos(pre_data);
 	preDistance = PreY*cos(delta);
@@ -417,11 +435,26 @@ void trigMeasurement(float preX, float curX, float preY, float curY){
 
 	// calculate delta x
 	deltaX = curDistance - preDistance;
-	// 0.25 has to be change to a variable to match the clock speed
-	Vel = deltaX/0.25;
+
+	// this will update the global vel variable;
+	vel = deltaX/interval; //
 
 	curX = preX;
 	curY = preY;
+}
+
+
+
+// this function will calculate the average velocity of an object over an interval
+void AveVel(float displacement){
+	numTicks++;
+	integral_x += displacement; // this will keep summing up the dx
+	if(numTicks>=interval){
+		aveVel=interal_x/interval;
+		numTicks=0;
+	}
+
+
 }
 
 
