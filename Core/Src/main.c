@@ -50,12 +50,12 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-#define TRIG_Pin GPIO_PIN_8
-#define TRIG_GPIO_Port GPIOA
 
-#define ECHO_Pin GPIO_PIN_9
-#define ECHO_GPIO_Port GPIOA
-
+//#define TRIG_Pin GPIO_PIN_8
+//#define TRIG_GPIO_Port GPIOA
+//
+//#define ECHO_Pin GPIO_PIN_9
+//#define ECHO_GPIO_PortT GPIOA
 
 /* USER CODE END PV */
 
@@ -93,9 +93,13 @@ float vel;
 float aveVel;
 
 
+int testing =0;
+
+// bool isPresent=false; // this will be set to whetever is returned by the sensors
+
 // use one of the following
 const uint32_t interval = 0.010; // this will be changed to match the clock
-uint32_t numTicks= 0; // 1 tick = 1 us
+// uint32_t numTicks= 0; // 1 tick = 1 us
 
 
 // when adding a number into array, do we initialize everytime it is full?
@@ -117,11 +121,14 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
+	 uint32_t numTicks= 0; // 1 tick = 1 us
 	// +++++++++++++++++++++++++++
 	// move this code to initialize state
+	/*
 	const int intervalFactor = 12;
 	float xArray[intervalFactor]={}; // 12 => every 0.6 seconds
 	float velArray[intervalFactor-1]={}; // every 0.6 seconds we calculate velocity
+	*/
 
   /* USER CODE END 1 */
 
@@ -155,15 +162,49 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-
-//#define TRIG_Pin GPIO_PIN_8
-//#define TRIG_GPIO_Port GPIOA
-//
-//#define ECHO_Pin GPIO_PIN_9
-//#define ECHO_GPIO_PortT GPIOA
-
   while (1)
   {
+	  	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	  	HAL_Delay(300);
+
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+		usDelay(3);
+
+		//*** START Ultrasonic measure routine ***//
+		//1. Output 10 usec TRIG
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
+		usDelay(10);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+
+		//2. Wait for ECHO pin rising edge
+		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_RESET);
+
+		//3. Start measuring ECHO pulse width in usec
+		numTicks = 0;
+		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_SET)
+		{
+			numTicks++;
+			usDelay(2); //2.8usec
+		};
+
+		//4. Estimate distance in cm
+		distance = (numTicks + 0.0f)*2.8*speedOfSound;
+
+		if(distance > 20&& distance<300){
+		  	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+		  	HAL_Delay(5000);
+		}
+
+
+
+	 /////////////////////////////////////////
+
+
+	  // this will be where our main logic sits
+//	  if (isPresent){
+//		  MeasureDistance();
+//	  }
+
 
 
 
@@ -288,7 +329,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 84-1;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 65535;
+  htim4.Init.Period = 0;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
@@ -361,7 +402,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LED_Pin|Trig_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED_Pin|TRIG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -369,24 +410,31 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_Pin Trig_Pin */
-  GPIO_InitStruct.Pin = LED_Pin|Trig_Pin;
+  /*Configure GPIO pins : LED_Pin TRIG_Pin */
+  GPIO_InitStruct.Pin = LED_Pin|TRIG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA6 echo_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_6|echo_Pin;
+  /*Configure GPIO pin : PA6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : ECHO_Pin */
+  GPIO_InitStruct.Pin = ECHO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(ECHO_GPIO_Port, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
 
-void usDelay(uint32_t uSec){
+void usDelay(uint32_t uSec)
+{
 	if(uSec < 2) uSec = 2;
 	usTIM->ARR = uSec - 1; 	/*sets the value in the auto-reload register*/
 	usTIM->EGR = 1; 			/*Re-initialises the timer*/
@@ -396,6 +444,8 @@ void usDelay(uint32_t uSec){
 	usTIM->SR &= ~(0x0001);
 }
 
+
+/*
 float MeasureDistance(){
 	  HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_RESET);
 	  usDelay(3);
@@ -408,9 +458,9 @@ float MeasureDistance(){
 	  //Wait till receiving the echo
 	  while(HAL_GPIO_ReadPin(ECHO_GPIO_Port, ECHO_Pin)== GPIO_PIN_RESET);
 
-	  numTicks = 0;
+	  // numTicks = 0;
 	  while(HAL_GPIO_ReadPin(ECHO_GPIO_Port, ECHO_Pin)== GPIO_PIN_SET){
-		  numTicks++;
+		  // numTicks++;
 		  usDelay(2); // actually 2.8 us
 	  };
 
@@ -418,7 +468,7 @@ float MeasureDistance(){
 
 	  return distance;
 }
-
+*/
 
 //// Description
 // This function will calculate the speed of the object using cosine law
@@ -429,6 +479,9 @@ float MeasureDistance(){
 // check which part is which and double check the algorithm
 // Do we need to calculate both at the same time or split into two function calls?
 int counter=0;
+
+
+/*
 void trigMeasurement(float preX, float curX, float preY, float curY){
 	// k is the distance between two sensors pair
 	//+++++++++++++++++++++++++++++++++++++++++++++
@@ -446,7 +499,7 @@ void trigMeasurement(float preX, float curX, float preY, float curY){
 
 	//+++++++++++++++++++++++++++++++++++++++++++++
 	if (counter < intervalFactor){ // aka cap of array
-		xArray[counter]=deltaX;
+		// xArray[counter]=deltaX;
 	}else{
 		counter ++; //reset after reaching max;
 	}
@@ -458,9 +511,11 @@ void trigMeasurement(float preX, float curX, float preY, float curY){
 
 	counter++;
 }
+*/
 
 
 
+/*
 // this function will calculate the average velocity of an object over an interval
 void AveVel(float displacement){
 //	numTicks++;
@@ -475,14 +530,14 @@ void AveVel(float displacement){
 
 		//+++++++++++++++++++++++++++++++++++++++++++++
 		// Problem is that first time some entries are still at their default values
-		float velArray[i]=(xArray[i+1]-xArray[i])/interval; // this is the idea of derivative where lim(f(x+h)-f(x))/h as h which is our interval approaches 0
+		// float velArray[i]=(xArray[i+1]-xArray[i])/interval; // this is the idea of derivative where lim(f(x+h)-f(x))/h as h which is our interval approaches 0
 
 		if (i==intervalFactor-1){
 			int totalVel=0;
 
 			for (int k=0;k<intervalFactor-1;k++){
-				totalVel+=velArray[k]; // sum all the velocity
-				velArray[k]=0; // no longer used
+				// totalVel+=velArray[k]; // sum all the velocity
+				// velArray[k]=0; // no longer used
 
 				//+++++++++++++++++++++++++++++++++++++++++++++
 				aveVel = totalVel/(interval*intervalFactor); // implementation of mean // do we need to multiply by a intervalFactor?
@@ -490,6 +545,8 @@ void AveVel(float displacement){
 		}
 	}
 }
+*/
+
 
 
 /* USER CODE END 4 */
