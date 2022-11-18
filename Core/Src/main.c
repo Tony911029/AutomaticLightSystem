@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdbool.h>
 
 /* USER CODE END Includes */
 
@@ -76,11 +77,26 @@ void AveVel(float displacement);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-float k = 1.0; // distance between two sensors
+
+
+//////pin layout//////
+/*
+ SensorID = 1
+ GPIO_PIN_8 Trig for sensor 1:
+ GPIO_PIN_9 Echo for sensor 1:
+
+ SensorID =2;
+ GPIO_PIN_6 Trig for sensor 2
+ GPIO_PIN_7 Echo for sensor 2:
+
+
+ GPIO_PIN_10 PIR Sensor:
+ */
+
 const float speedOfSound = 0.0343/2; // go and back
-float distance;
+// float distance;
 
-
+float k = 1.0; // distance between two sensors
 float pre_data;
 float delta;
 float cur_data;
@@ -95,7 +111,7 @@ float aveVel;
 
 int testing =0;
 
-// bool isPresent=false; // this will be set to whetever is returned by the sensors
+// bool isPresent=0; // this will be set to whetever is returned by the sensors
 
 // use one of the following
 const uint32_t interval = 0.010; // this will be changed to match the clock
@@ -164,7 +180,16 @@ int main(void)
 
   while (1)
   {
-	  MeasureDistance(1);
+	  // MeasureDistance(1);
+
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	  HAL_Delay(500);
+
+	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)==GPIO_PIN_SET){
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7,GPIO_PIN_SET);
+		  HAL_Delay(1000);
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7,GPIO_PIN_RESET);
+	  }
 
 
 
@@ -370,10 +395,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LED_Pin|TRIG_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED_Pin|Ext_LED_Pin|TRIG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -381,8 +405,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_Pin TRIG_Pin */
-  GPIO_InitStruct.Pin = LED_Pin|TRIG_Pin;
+  /*Configure GPIO pins : LED_Pin Ext_LED_Pin TRIG_Pin */
+  GPIO_InitStruct.Pin = LED_Pin|Ext_LED_Pin|TRIG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -399,6 +423,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(ECHO_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PIR_Pin */
+  GPIO_InitStruct.Pin = PIR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(PIR_GPIO_Port, &GPIO_InitStruct);
 
 }
 
