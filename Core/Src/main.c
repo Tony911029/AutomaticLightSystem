@@ -68,7 +68,7 @@ static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
 void usDelay(uint32_t uSec);
-float MeasureDistance();
+float MeasureDistance(int sensorID);
 void trigMeasurement(float preX, float curX, float preY, float curY);
 void AveVel(float displacement);
 
@@ -164,7 +164,7 @@ int main(void)
 
   while (1)
   {
-	  MeasureDistance();
+	  MeasureDistance(1);
 
 
 
@@ -415,40 +415,90 @@ void usDelay(uint32_t uSec)
 	usTIM->SR &= ~(0x0001);
 }
 
+// SensorID = 1
+// GPIO_PIN_8 Trig for sensor 1:
+// GPIO_PIN_9 Echo for sensor 1:
+
+// SensorID =2;
+// GPIO_PIN_6 Trig for sensor 2
+// GPIO_PIN_7 Echo for sensor 2:
+float MeasureDistance(int sensorID){
+	float localDistance=0;
+	if (sensorID == 1){
+		HAL_Delay(300);
+
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+		usDelay(3);
+
+		//*** START Ultrasonic measure routine ***//
+		//1. Output 10 usec TRIG
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
+		usDelay(10);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+
+		//2. Wait for ECHO pin rising edge
+		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_RESET);
+
+		//3. Start measuring ECHO pulse width in usec
+		numTicks = 0;
+		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_SET)
+		{
+			numTicks++;
+			usDelay(2); //2.8usec
+		};
 
 
-float MeasureDistance(){
-	HAL_Delay(300);
+		localDistance = (numTicks + 0.0f)*2.8*speedOfSound; // Speed of sound is already divided by 2 here.
 
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
-	usDelay(3);
 
-	//*** START Ultrasonic measure routine ***//
-	//1. Output 10 usec TRIG
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
-	usDelay(10);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+		return localDistance;
+	}
 
-	//2. Wait for ECHO pin rising edge
-	while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_RESET);
+	if (sensorID ==2){
+		HAL_Delay(300);
 
-	//3. Start measuring ECHO pulse width in usec
-	numTicks = 0;
-	while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_SET)
-	{
-		numTicks++;
-		usDelay(2); //2.8usec
-	};
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+		usDelay(3);
 
-	//4. Estimate distance in cm
-	distance = (numTicks + 0.0f)*2.8*speedOfSound; // Speed of sound is already divided by 2 here.
+		//*** START Ultrasonic measure routine ***//
+		//1. Output 10 usec TRIG
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+		usDelay(10);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
 
-	if(distance > 20){
+		//2. Wait for ECHO pin rising edge
+		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7) == GPIO_PIN_RESET);
+
+		//3. Start measuring ECHO pulse width in usec
+		numTicks = 0;
+		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_SET)
+		{
+			numTicks++;
+			usDelay(2); //2.8usec
+		};
+
+
+		localDistance = (numTicks + 0.0f)*2.8*speedOfSound; // Speed of sound is already divided by 2 here.
+
+		if(localDistance > 20){
+			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+			HAL_Delay(3000);
+		}
+
+		return localDistance;
+	}
+
+
+
+	// This is the testing code
+	/*
+	if(localDistance > 20){
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 		HAL_Delay(3000);
 	}
+	*/
+	return localDistance;
 
-	return distance;
 }
 
 
