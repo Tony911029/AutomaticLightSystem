@@ -99,7 +99,7 @@ int testing =0;
 
 // use one of the following
 const uint32_t interval = 0.010; // this will be changed to match the clock
-// uint32_t numTicks= 0; // 1 tick = 1 us
+uint32_t numTicks= 0; // 1 tick = 1 us
 
 
 // when adding a number into array, do we initialize everytime it is full?
@@ -121,7 +121,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
-	 uint32_t numTicks= 0; // 1 tick = 1 us
+
 	// +++++++++++++++++++++++++++
 	// move this code to initialize state
 	/*
@@ -164,36 +164,7 @@ int main(void)
 
   while (1)
   {
-	  	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	  	HAL_Delay(300);
-
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
-		usDelay(3);
-
-		//*** START Ultrasonic measure routine ***//
-		//1. Output 10 usec TRIG
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
-		usDelay(10);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
-
-		//2. Wait for ECHO pin rising edge
-		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_RESET);
-
-		//3. Start measuring ECHO pulse width in usec
-		numTicks = 0;
-		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_SET)
-		{
-			numTicks++;
-			usDelay(2); //2.8usec
-		};
-
-		//4. Estimate distance in cm
-		distance = (numTicks + 0.0f)*2.8*speedOfSound;
-
-		if(distance > 20&& distance<300){
-		  	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-		  	HAL_Delay(5000);
-		}
+	  MeasureDistance();
 
 
 
@@ -445,30 +416,41 @@ void usDelay(uint32_t uSec)
 }
 
 
-/*
+
 float MeasureDistance(){
-	  HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_RESET);
-	  usDelay(3);
+	HAL_Delay(300);
 
-	  HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_SET); // send out the signal for 10 microsecond
-	  usDelay(10);
-	  HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_RESET); // turn of the trigger pin
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+	usDelay(3);
 
+	//*** START Ultrasonic measure routine ***//
+	//1. Output 10 usec TRIG
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
+	usDelay(10);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
 
-	  //Wait till receiving the echo
-	  while(HAL_GPIO_ReadPin(ECHO_GPIO_Port, ECHO_Pin)== GPIO_PIN_RESET);
+	//2. Wait for ECHO pin rising edge
+	while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_RESET);
 
-	  // numTicks = 0;
-	  while(HAL_GPIO_ReadPin(ECHO_GPIO_Port, ECHO_Pin)== GPIO_PIN_SET){
-		  // numTicks++;
-		  usDelay(2); // actually 2.8 us
-	  };
+	//3. Start measuring ECHO pulse width in usec
+	numTicks = 0;
+	while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_SET)
+	{
+		numTicks++;
+		usDelay(2); //2.8usec
+	};
 
-	  distance = (numTicks + 0.0f)*2.8*speedOfSound; // speedOfSound is already divided by 2
+	//4. Estimate distance in cm
+	distance = (numTicks + 0.0f)*2.8*speedOfSound; // Speed of sound is already divided by 2 here.
 
-	  return distance;
+	if(distance > 20){
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+		HAL_Delay(3000);
+	}
+
+	return distance;
 }
-*/
+
 
 //// Description
 // This function will calculate the speed of the object using cosine law
