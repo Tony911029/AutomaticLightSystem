@@ -89,6 +89,9 @@ float AveVel(float velArray[]);
  GPIO_PIN_6 (PA6) Trig for sensor 2:
  GPIO_PIN_7 (PA7) Echo for sensor 2:
 
+ sensor 1 is the one at the door
+ sensor 2 is the one k meters from the door
+
 
  GPIO_PIN_10 PIR Sensor:
  */
@@ -174,6 +177,9 @@ int main(void)
   int index=0;
   float xArray[10]={}; // 12 => every 0.6 seconds
   float velArray[9]={}; // every 0.6 seconds we calculate velocity
+
+
+  uint16_t peopleCounter=0;
 
   // 1 tick = 1 us
   while (1)
@@ -262,16 +268,19 @@ int main(void)
 
 
 
-	  switch(lightStage) {
-	    case 0:
-	      preX = MeasureDistance(1);
-		  preY = MeasureDistance(2);
-		  if (timer>interval){ // every 0.01 seconds;
-			  velStage++;
-		      break;
-		  }
 
-	  }
+	  // light state machine
+//	  if (aveVel>0){ // approaching the door
+//		  switch(lightStage) {
+//		    case 0:
+//		    	if (30.0 < Measurement(3)){	 // this should give the third distance
+//		    		peopleCounter--;
+//		    		lightStage++;
+//		    	}
+//
+//		  }
+//	  }
+
 
 
 
