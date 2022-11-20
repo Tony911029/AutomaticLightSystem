@@ -70,8 +70,8 @@ static void MX_TIM4_Init(void);
 
 void usDelay(uint32_t uSec);
 float MeasureDistance(int sensorID);
-void trigMeasurement(float preX, float curX, float preY, float curY);
-void AveVel(float displacement);
+float trigMeasurement(float preX, float curX, float preY, float curY);
+float AveVel(float velArray[]);
 
 /* USER CODE END PFP */
 
@@ -94,26 +94,10 @@ void AveVel(float displacement);
  */
 
 const float speedOfSound = 0.0343/2; // go and back
-// float distance;
-
 int const timemultipler = 4200000;
-
-float k = 1.0; // distance between two sensors
-float pre_data;
-float delta;
-float cur_data;
-float sigma;
-float preDistance;
-float curDistance;
-float integral_x;
-float deltaX;
-float vel;
-float aveVel;
+float const k = 1.0; // distance between two sensors
 
 
-int testing =0;
-
-int counter = 0;
 
 // bool isPresent=0; // this will be set to whetever is returned by the sensors
 
@@ -122,8 +106,6 @@ const uint32_t interval = 0.010; // this will be changed to match the clock
 uint32_t numTicks= 0; // 1 tick = 1 us
 
 
-// when adding a number into array, do we initialize everytime it is full?
-const int intervalFactor = 12;
 
 // local array for mean vel calculation
 // how many entries do we want? how often do we calculate the velocity
@@ -140,16 +122,6 @@ const int intervalFactor = 12;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
-
-	// +++++++++++++++++++++++++++
-	// move this code to initialize state
-	/*
-	const int intervalFactor = 12;
-	float xArray[intervalFactor]={}; // 12 => every 0.6 seconds
-	float velArray[intervalFactor-1]={}; // every 0.6 seconds we calculate velocity
-	*/
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -182,14 +154,31 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  int testing_d_1 = 0;
-  int testing_d_2 = 0;
-  int testint_counter = 0;
+
+  float preX=0;
+  float curX=0;
+
+  float preY=0;
+  float curY=0;
+
+  float const interval= 0.01*timemultipler;
+
+  float deltaX=0;
+
+  float aveVel=0;
+
+  int velStage=0;
+  int lightStage=0;
+  int timer = 0;
+
+  int index=0;
+  float xArray[10]={}; // 12 => every 0.6 seconds
+  float velArray[9]={}; // every 0.6 seconds we calculate velocity
 
   // 1 tick = 1 us
   while (1)
   {
-
+	  timer++;
 	  ////////////Test 1///////////
 //	  HAL_Delay(500);
 //
@@ -200,15 +189,6 @@ int main(void)
 //		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 //		  HAL_Delay(3000);
 //	  }
-
-
-
-	  ///////Ticks Testing;
-	  counter ++;
-	  if (counter > timemultipler){
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-		  counter=0;
-	  }
 
 
 
@@ -229,9 +209,75 @@ int main(void)
 
 
 	  ////////////Testing3/////////
+	  // stage machine to calculate average velocity
+	  switch(velStage) {
+	    case 0:
+	      preX = MeasureDistance(1);
+		  preY = MeasureDistance(2);
+		  if (timer>interval){ // every 0.01 seconds;
+			  velStage++;
+			  timer=0;
+		      break;
+		  }
+
+	    case 1:
+		  curX = MeasureDistance(1);
+		  curY = MeasureDistance(2);
+		  break;
+
+	    case 2:
+	    	deltaX=trigMeasurement(preX, curX, preY, curY); //dX
+	    	curX=preX;
+	    	curY=preY;
+	    	velStage++;
+	    	break;
+
+	    case 3: // add instant x to array
+			xArray[index] = deltaX; // dX
+			index++;
+			velStage=0;
+
+			if (index==10){
+				velStage=4;
+				index=0;
+				break;
+			}
+
+	    case 4: // add vel to the array
+	    	velArray[index]= (xArray[index+1]-xArray[index])/(interval);// calculate dV; derivative
+	    	index++;
+
+	    	if (index==9){
+	    		velStage++;
+	    		index=0;
+	    		break;
+	    	}
 
 
-	  // trigMeasurement(preX, curX, preY, curY);
+	    case 5:
+	    	aveVel = AveVel(velArray);
+	    	velStage++;
+	    	break;
+	  }
+
+
+
+	  switch(lightStage) {
+	    case 0:
+	      preX = MeasureDistance(1);
+		  preY = MeasureDistance(2);
+		  if (timer>interval){ // every 0.01 seconds;
+			  velStage++;
+		      break;
+		  }
+
+	  }
+
+
+
+
+
+	  //
 
 
 
@@ -617,70 +663,60 @@ float MeasureDistance(int sensorID){
 
 
 
-void trigMeasurement(float preX, float curX, float preY, float curY){
+float trigMeasurement(float preX, float curX, float preY, float curY){
 	// k is the distance between two sensors pair
 	//+++++++++++++++++++++++++++++++++++++++++++++
-	pre_data = -((preX*preX)-(preY*preY)-(k*k))/(preY*k);
-	delta = acos(pre_data);
-	preDistance = preY*cos(delta);
+	float local_deltaX=0;
+	float preDistance=0;
+	float curDistance=0;
+	float preData=0;
+	float curData=0;
+	float delta1=0;
+	float delta2=0;
 
 
-	cur_data = -((curX*curX)-(curY*curY)-(k*k))/(curY*k);
-	sigma = acos(cur_data);
-	curDistance = curY*cos(sigma);
+	preData = -((preX*preX)-(preY*preY)-(k*k))/(preY*k);
+	delta1 = acos(preData);
+	preDistance = preY*cos(delta1);
+
+
+	curData = -((curX*curX)-(curY*curY)-(k*k))/(curY*k);
+	delta2 = acos(curData);
+	curDistance = curY*cos(delta2);
 
 	// calculate delta x
-	deltaX = curDistance - preDistance;
+	local_deltaX = curDistance - preDistance;
+
+	return local_deltaX;
+
+}
+
+
+
+
+
+// this function will calculate the average velocity of an object over an interval
+float AveVel(float velArray[]){ // size 9
+
+	float sum=0;
+	float aveVel=0;
+	for (int i=0; i<9;i++){
+		sum += velArray[i];
+	}
+
+	aveVel = sum/(interval*10); // mean value
+	return aveVel;
+
+
+
+
 
 	//+++++++++++++++++++++++++++++++++++++++++++++
-	if (counter < intervalFactor){ // aka cap of array
-		// xArray[counter]=deltaX;
-	}else{
-		counter ++; //reset after reaching max;
-	}
-	// this will update the global vel variable;
-	vel = deltaX/interval; //
-
-	curX = preX;
-	curY = preY;
-
-	counter++;
+	// Problem is that first time some entries are still at their default values
+	// float velArray[i]=(xArray[i+1]-xArray[i])/interval; // this is the idea of derivative where lim(f(x+h)-f(x))/h as h which is our interval approaches 0
 }
 
 
-
-
-/*
-// this function will calculate the average velocity of an object over an interval
-void AveVel(float displacement){
-//	numTicks++;
-//	integral_x += displacement; // this will keep summing up the dx
-//	if(numTicks>=interval){
-//		aveVel=interal_x/interval;
-//		numTicks=0;
-//	}
-
-	for (int i=0;i<intervalFactor; i++){
-
-
-		//+++++++++++++++++++++++++++++++++++++++++++++
-		// Problem is that first time some entries are still at their default values
-		// float velArray[i]=(xArray[i+1]-xArray[i])/interval; // this is the idea of derivative where lim(f(x+h)-f(x))/h as h which is our interval approaches 0
-
-		if (i==intervalFactor-1){
-			int totalVel=0;
-
-			for (int k=0;k<intervalFactor-1;k++){
-				// totalVel+=velArray[k]; // sum all the velocity
-				// velArray[k]=0; // no longer used
-
-				//+++++++++++++++++++++++++++++++++++++++++++++
-				aveVel = totalVel/(interval*intervalFactor); // implementation of mean // do we need to multiply by a intervalFactor?
-			}
-		}
-	}
-}
-*/
 
 
 
