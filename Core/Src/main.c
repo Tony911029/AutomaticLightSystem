@@ -184,7 +184,9 @@ int main(void)
   // 1 tick = 1 us
   while (1)
   {
+
 	  timer++;
+
 	  ////////////Test 1///////////
 //	  HAL_Delay(500);
 //
@@ -216,6 +218,7 @@ int main(void)
 
 	  ////////////Testing3/////////
 	  // stage machine to calculate average velocity
+
 	  switch(velStage) {
 	    case 0:
 	      preX = MeasureDistance(1);
@@ -268,18 +271,38 @@ int main(void)
 
 
 
+	  // is there a better way to determine if the person has enter?
+	  // light state machine to turn off the light
+	  if (aveVel<0){ // leaving the door
+		  switch(lightStage) {
+		    case 0:
+		    	if (MeasureDistance(3)>30){	 // this should give the third distance
+		    		peopleCounter--;
+		    		lightStage++;
+		    		break;
+		    	}
+		    	break;
 
-	  // light state machine
-//	  if (aveVel>0){ // approaching the door
-//		  switch(lightStage) {
-//		    case 0:
-//		    	if (30.0 < Measurement(3)){	 // this should give the third distance
-//		    		peopleCounter--;
-//		    		lightStage++;
-//		    	}
-//
-//		  }
-//	  }
+		    case 1:
+		    	if(peopleCounter>0){
+		    		lightStage=0;
+		    		break;
+		    	}else{
+		    		// turn the light off
+		    		peopleCounter=0;
+		    		lightStage=0;
+		    		break;
+		    	}
+
+
+		  }
+	  }else{ // approaching the door
+			if (MeasureDistance(3)<30.0){	 // this should give the third distance
+				peopleCounter++;
+				lightStage=0;
+			}
+	  }
+
 
 
 
