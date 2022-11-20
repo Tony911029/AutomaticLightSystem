@@ -82,12 +82,12 @@ void AveVel(float displacement);
 //////pin layout//////
 /*
  SensorID = 1
- GPIO_PIN_8 Trig for sensor 1:
- GPIO_PIN_9 Echo for sensor 1:
+ GPIO_PIN_8 (PA8) Trig for sensor 1:
+ GPIO_PIN_9 (PA9) Echo for sensor 1:
 
  SensorID =2;
- GPIO_PIN_6 Trig for sensor 2
- GPIO_PIN_7 Echo for sensor 2:
+ GPIO_PIN_6 (PA6) Trig for sensor 2:
+ GPIO_PIN_7 (PA7) Echo for sensor 2:
 
 
  GPIO_PIN_10 PIR Sensor:
@@ -110,6 +110,8 @@ float aveVel;
 
 
 int testing =0;
+
+int counter = 0;
 
 // bool isPresent=0; // this will be set to whetever is returned by the sensors
 
@@ -178,18 +180,36 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+
+  // 1 tick = 1 us
   while (1)
   {
 	  // MeasureDistance(1);
+	  /*
+	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)==GPIO_PIN_SET){ // when detecting people
 
-	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	  HAL_Delay(500);
-
-	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)==GPIO_PIN_SET){
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7,GPIO_PIN_SET);
-		  HAL_Delay(1000);
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7,GPIO_PIN_RESET);
 	  }
+	  */
+
+
+/*
+	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)==GPIO_PIN_SET){
+		  MeasureDistance();
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7,GPIO_PIN_SET);
+		  HAL_Delay(1000);
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7,GPIO_PIN_RESET);
+	  }
+*/
+
+	  usDelay(100000);
+
+	  if (counter>10000000){
+		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+		  counter=0;
+	  }
+
+	  counter++;
+
 
 
 
@@ -197,9 +217,7 @@ int main(void)
 
 
 	  // this will be where our main logic sits
-//	  if (isPresent){
-//		  MeasureDistance();
-//	  }
+
 
 
 
@@ -540,10 +558,10 @@ float MeasureDistance(int sensorID){
 
 // check which part is which and double check the algorithm
 // Do we need to calculate both at the same time or split into two function calls?
-int counter=0;
+// int counter=0;
 
 
-/*
+
 void trigMeasurement(float preX, float curX, float preY, float curY){
 	// k is the distance between two sensors pair
 	//+++++++++++++++++++++++++++++++++++++++++++++
@@ -573,7 +591,7 @@ void trigMeasurement(float preX, float curX, float preY, float curY){
 
 	counter++;
 }
-*/
+
 
 
 
