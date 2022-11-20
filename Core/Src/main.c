@@ -96,6 +96,8 @@ void AveVel(float displacement);
 const float speedOfSound = 0.0343/2; // go and back
 // float distance;
 
+int const timemultipler = 4200000;
+
 float k = 1.0; // distance between two sensors
 float pre_data;
 float delta;
@@ -180,16 +182,85 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  int testing_d_1 = 0;
+  int testing_d_2 = 0;
+  int testint_counter = 0;
 
   // 1 tick = 1 us
   while (1)
   {
-	  // MeasureDistance(1);
+
+	  ////////////Test 1///////////
+//	  HAL_Delay(500);
+//
+//	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+//
+//	  testing_d_1 = MeasureDistance(1);
+//	  if (testing_d_1 > 15){
+//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+//		  HAL_Delay(3000);
+//	  }
+
+
+
+	  ///////Ticks Testing;
+	  counter ++;
+	  if (counter > timemultipler){
+		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+		  counter=0;
+	  }
+
+
+
+	  ////////////Testing2/////////
+//
+//	  HAL_Delay(500);
+//
+//	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+//
+//	  testing_d_2 = MeasureDistance(2);
+//	  if (testing_d_2 > 15){
+//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+//		  HAL_Delay(3000);
+//	  }
+//
+
+
+
+
+	  ////////////Testing3/////////
+
+
+	  // trigMeasurement(preX, curX, preY, curY);
+
+
+
+
+	  // HAL_Delay(150);
+
+
+	  // HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+
+	  // testing_d_2 = MeasureDistance(2);
+	  //if (testing_d_2 > 10){
+//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+//		  HAL_Delay(3000);
+//	  }
+
+
+
+
 	  /*
 	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)==GPIO_PIN_SET){ // when detecting people
 
 	  }
 	  */
+
+
+
+
+
+
 
 
 /*
@@ -201,14 +272,6 @@ int main(void)
 	  }
 */
 
-	  usDelay(100000);
-
-	  if (counter>10000000){
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-		  counter=0;
-	  }
-
-	  counter++;
 
 
 
@@ -415,7 +478,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LED_Pin|Ext_LED_Pin|TRIG_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED_Pin|ECHO2_Pin|TRIG1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -423,24 +486,24 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_Pin Ext_LED_Pin TRIG_Pin */
-  GPIO_InitStruct.Pin = LED_Pin|Ext_LED_Pin|TRIG_Pin;
+  /*Configure GPIO pins : LED_Pin ECHO2_Pin TRIG1_Pin */
+  GPIO_InitStruct.Pin = LED_Pin|ECHO2_Pin|TRIG1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  /*Configure GPIO pin : TRIG2_Pin */
+  GPIO_InitStruct.Pin = TRIG2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(TRIG2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ECHO_Pin */
-  GPIO_InitStruct.Pin = ECHO_Pin;
+  /*Configure GPIO pin : ECHO2C9_Pin */
+  GPIO_InitStruct.Pin = ECHO2C9_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(ECHO_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(ECHO2C9_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PIR_Pin */
   GPIO_InitStruct.Pin = PIR_Pin;
@@ -473,8 +536,6 @@ void usDelay(uint32_t uSec)
 float MeasureDistance(int sensorID){
 	float localDistance=0;
 	if (sensorID == 1){
-		HAL_Delay(300);
-
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
 		usDelay(3);
 
@@ -502,9 +563,7 @@ float MeasureDistance(int sensorID){
 		return localDistance;
 	}
 
-	if (sensorID ==2){
-		HAL_Delay(300);
-
+	if (sensorID == 2){
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
 		usDelay(3);
 
@@ -519,7 +578,7 @@ float MeasureDistance(int sensorID){
 
 		//3. Start measuring ECHO pulse width in usec
 		numTicks = 0;
-		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_SET)
+		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7) == GPIO_PIN_SET)
 		{
 			numTicks++;
 			usDelay(2); //2.8usec
@@ -528,10 +587,6 @@ float MeasureDistance(int sensorID){
 
 		localDistance = (numTicks + 0.0f)*2.8*speedOfSound; // Speed of sound is already divided by 2 here.
 
-		if(localDistance > 20){
-			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-			HAL_Delay(3000);
-		}
 
 		return localDistance;
 	}
