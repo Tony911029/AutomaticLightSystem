@@ -86,19 +86,23 @@ float AveVel(float velArray[]);
  GPIO_PIN_9 (PA9) Echo for sensor 1:
 
  SensorID =2;
- GPIO_PIN_6 (PA6) Trig for sensor 2:
- GPIO_PIN_7 (PA7) Echo for sensor 2:
+ GPIO_PIN_6 (PB4) Trig for sensor 2:
+ GPIO_PIN_7 (PB10) Echo for sensor 2:
 
  sensor 1 is the one at the door
  sensor 2 is the one k meters from the door
 
 
- GPIO_PIN_10 PIR Sensor:
+ GPIO_PIN_10 (PA10) PIR Sensor:
+
+ PB3: Relay
+
+
  */
 
 const float speedOfSound = 0.0340/2; // go and back
 int const timemultipler = 4200000;
-float const k = 1.0; // distance between two sensors
+float const k = 30; // distance between two sensors
 
 
 
@@ -191,17 +195,28 @@ int main(void)
   {
 
 	  timer++;
-	  isPresent = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10); // when detecting people
-	  ////////////Test 1///////////
-	  HAL_Delay(500);
+	  // isPresent = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10); // when detecting people
+	  ////////////Test 1: 1 ultrasonic sensor ///////////
+/*
+	  testingdistance = MeasureDistance(1);
+	  if (testingdistance > 15){ // 15 cms
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET); // engage the relay
+		  HAL_Delay(3000);
 
-	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	  }else{
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+	  }
 
-//	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_10);
+*/
 
 
+
+
+	  ////////////Test 2: 2 ultrasosnic sensor ///////////
+/*
 	  testingdistance = MeasureDistance(2);
-	  if (testingdistance > 15){
+	  if (testingdistance > 15){  // 15 cms
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
 		  HAL_Delay(3000);
@@ -209,29 +224,22 @@ int main(void)
 	  }else{
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
 	  }
+*/
 
 
 
 
-
-	  ////////////Testing2/////////
-
-//	  HAL_Delay(500);
-//
-//	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-//	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_13);
-
-//	  testingdistance = MeasureDistance(2);
-//	  if (testingdistance > 15){
-//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_13, GPIO_PIN_SET);
-//		  HAL_Delay(3000);
-//	  }
+	  ////////////Test 3: PIR sensor ///////////
+	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)==GPIO_PIN_RESET){
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
+	  }else{
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+	  }
 
 
 
 
-
-	  ////////////Testing3/////////
+	  ////////////Testing4/////////
 	  // stage machine to calculate average velocity
 
 	  /*
@@ -336,60 +344,6 @@ int main(void)
 
 
 
-
-
-
-
-
-
-
-	  //
-
-
-
-
-	  // HAL_Delay(150);
-
-
-	  // HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-
-	  // testing_d_2 = MeasureDistance(2);
-	  //if (testing_d_2 > 10){
-//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-//		  HAL_Delay(3000);
-//	  }
-
-
-
-
-	  /*
-
-	  */
-
-
-
-
-
-
-
-
-/*
-	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)==GPIO_PIN_SET){
-		  MeasureDistance();
-		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7,GPIO_PIN_SET);
-		  HAL_Delay(1000);
-		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7,GPIO_PIN_RESET);
-	  }
-*/
-
-
-
-
-
-	 /////////////////////////////////////////
-
-
-	  // this will be where our main logic sits
 
 
 
