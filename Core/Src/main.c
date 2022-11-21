@@ -86,19 +86,23 @@ float AveVel(float velArray[]);
  GPIO_PIN_9 (PA9) Echo for sensor 1:
 
  SensorID =2;
- GPIO_PIN_6 (PA6) Trig for sensor 2:
- GPIO_PIN_7 (PA7) Echo for sensor 2:
+ GPIO_PIN_6 (PB4) Trig for sensor 2:
+ GPIO_PIN_7 (PB10) Echo for sensor 2:
 
  sensor 1 is the one at the door
  sensor 2 is the one k meters from the door
 
 
- GPIO_PIN_10 PIR Sensor:
+ GPIO_PIN_10 (PA10) PIR Sensor:
+
+ PB3: Relay
+
+
  */
 
-const float speedOfSound = 0.0343/2; // go and back
+const float speedOfSound = 0.0340/2; // go and back
 int const timemultipler = 4200000;
-float const k = 1.0; // distance between two sensors
+float const k = 30; // distance between two sensors
 
 
 
@@ -183,44 +187,62 @@ int main(void)
 
   bool isPresent = false;
 
+
+  int testingdistance=0;
+
   // 1 tick = 1 us
   while (1)
   {
 
 	  timer++;
-	  isPresent = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10); // when detecting people
-	  ////////////Test 1///////////
-//	  HAL_Delay(500);
-//
-//	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-//
-//	  testing_d_1 = MeasureDistance(1);
-//	  if (testing_d_1 > 15){
-//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-//		  HAL_Delay(3000);
-//	  }
+	  // isPresent = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10); // when detecting people
+	  ////////////Test 1: 1 ultrasonic sensor ///////////
+/*
+	  testingdistance = MeasureDistance(1);
+	  if (testingdistance > 15){ // 15 cms
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET); // engage the relay
+		  HAL_Delay(3000);
 
+	  }else{
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+	  }
 
-
-	  ////////////Testing2/////////
-//
-//	  HAL_Delay(500);
-//
-//	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-//
-//	  testing_d_2 = MeasureDistance(2);
-//	  if (testing_d_2 > 15){
-//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-//		  HAL_Delay(3000);
-//	  }
-//
+*/
 
 
 
 
-	  ////////////Testing3/////////
+	  ////////////Test 2: 2 ultrasosnic sensor ///////////
+/*
+	  testingdistance = MeasureDistance(2);
+	  if (testingdistance > 15){  // 15 cms
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
+		  HAL_Delay(3000);
+
+	  }else{
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+	  }
+*/
+
+
+
+
+	  ////////////Test 3: PIR sensor ///////////
+	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)==GPIO_PIN_RESET){
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
+	  }else{
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+	  }
+
+
+
+
+	  ////////////Testing4/////////
 	  // stage machine to calculate average velocity
 
+	  /*
 	  if (isPresent){
 		  switch(velStage) {
 		    case 0:
@@ -318,64 +340,10 @@ int main(void)
 		  }
 
 
-	  }
+	  }*/
 
 
 
-
-
-
-
-
-
-
-	  //
-
-
-
-
-	  // HAL_Delay(150);
-
-
-	  // HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-
-	  // testing_d_2 = MeasureDistance(2);
-	  //if (testing_d_2 > 10){
-//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-//		  HAL_Delay(3000);
-//	  }
-
-
-
-
-	  /*
-
-	  */
-
-
-
-
-
-
-
-
-/*
-	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)==GPIO_PIN_SET){
-		  MeasureDistance();
-		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7,GPIO_PIN_SET);
-		  HAL_Delay(1000);
-		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7,GPIO_PIN_RESET);
-	  }
-*/
-
-
-
-
-
-	 /////////////////////////////////////////
-
-
-	  // this will be where our main logic sits
 
 
 
@@ -572,9 +540,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LED_Pin|ECHO2_Pin|TRIG1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED_Pin|TRIG1_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, RELAY_Pin|TRIG2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -582,30 +554,37 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_Pin ECHO2_Pin TRIG1_Pin */
-  GPIO_InitStruct.Pin = LED_Pin|ECHO2_Pin|TRIG1_Pin;
+  /*Configure GPIO pins : LED_Pin TRIG1_Pin */
+  GPIO_InitStruct.Pin = LED_Pin|TRIG1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : TRIG2_Pin */
-  GPIO_InitStruct.Pin = TRIG2_Pin;
+  /*Configure GPIO pin : ECHO2_Pin */
+  GPIO_InitStruct.Pin = ECHO2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(TRIG2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(ECHO2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ECHO2C9_Pin */
-  GPIO_InitStruct.Pin = ECHO2C9_Pin;
+  /*Configure GPIO pin : ECHO1_Pin */
+  GPIO_InitStruct.Pin = ECHO1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(ECHO2C9_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(ECHO1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PIR_Pin */
   GPIO_InitStruct.Pin = PIR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(PIR_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : RELAY_Pin TRIG2_Pin */
+  GPIO_InitStruct.Pin = RELAY_Pin|TRIG2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 
@@ -660,21 +639,21 @@ float MeasureDistance(int sensorID){
 	}
 
 	if (sensorID == 2){
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
 		usDelay(3);
 
 		//*** START Ultrasonic measure routine ***//
 		//1. Output 10 usec TRIG
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
 		usDelay(10);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
 
 		//2. Wait for ECHO pin rising edge
-		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7) == GPIO_PIN_RESET);
+		while(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10) == GPIO_PIN_RESET);
 
 		//3. Start measuring ECHO pulse width in usec
 		numTicks = 0;
-		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7) == GPIO_PIN_SET)
+		while(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10) == GPIO_PIN_SET)
 		{
 			numTicks++;
 			usDelay(2); //2.8usec
