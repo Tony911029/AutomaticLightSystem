@@ -96,7 +96,7 @@ float AveVel(float velArray[]);
  GPIO_PIN_10 PIR Sensor:
  */
 
-const float speedOfSound = 0.0343/2; // go and back
+const float speedOfSound = 0.0340/2; // go and back
 int const timemultipler = 4200000;
 float const k = 1.0; // distance between two sensors
 
@@ -183,6 +183,9 @@ int main(void)
 
   bool isPresent = false;
 
+
+  int testingdistance=0;
+
   // 1 tick = 1 us
   while (1)
   {
@@ -190,30 +193,31 @@ int main(void)
 	  timer++;
 	  isPresent = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10); // when detecting people
 	  ////////////Test 1///////////
-//	  HAL_Delay(500);
-//
-//	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-//
-//	  testing_d_1 = MeasureDistance(1);
-//	  if (testing_d_1 > 15){
-//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-//		  HAL_Delay(3000);
-//	  }
+	  HAL_Delay(500);
+
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+
+	  testingdistance = MeasureDistance(1);
+	  if (testingdistance > 15){
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+		  HAL_Delay(3000);
+	  }
 
 
 
 	  ////////////Testing2/////////
-//
+
 //	  HAL_Delay(500);
 //
 //	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-//
-//	  testing_d_2 = MeasureDistance(2);
-//	  if (testing_d_2 > 15){
-//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+//	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_13);
+
+//	  testingdistance = MeasureDistance(2);
+//	  if (testingdistance > 15){
+//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_13, GPIO_PIN_SET);
 //		  HAL_Delay(3000);
 //	  }
-//
+
 
 
 
@@ -221,6 +225,7 @@ int main(void)
 	  ////////////Testing3/////////
 	  // stage machine to calculate average velocity
 
+	  /*
 	  if (isPresent){
 		  switch(velStage) {
 		    case 0:
@@ -318,7 +323,7 @@ int main(void)
 		  }
 
 
-	  }
+	  }*/
 
 
 
