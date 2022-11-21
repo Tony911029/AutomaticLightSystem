@@ -70,8 +70,8 @@ static void MX_TIM4_Init(void);
 
 void usDelay(uint32_t uSec);
 float MeasureDistance(int sensorID);
-void trigMeasurement(float preX, float curX, float preY, float curY);
-void AveVel(float displacement);
+float trigMeasurement(float preX, float curX, float preY, float curY);
+float AveVel(float velArray[]);
 
 /* USER CODE END PFP */
 
@@ -89,29 +89,18 @@ void AveVel(float displacement);
  GPIO_PIN_6 (PA6) Trig for sensor 2:
  GPIO_PIN_7 (PA7) Echo for sensor 2:
 
+ sensor 1 is the one at the door
+ sensor 2 is the one k meters from the door
+
 
  GPIO_PIN_10 PIR Sensor:
  */
 
 const float speedOfSound = 0.0343/2; // go and back
-// float distance;
-
-float k = 1.0; // distance between two sensors
-float pre_data;
-float delta;
-float cur_data;
-float sigma;
-float preDistance;
-float curDistance;
-float integral_x;
-float deltaX;
-float vel;
-float aveVel;
+int const timemultipler = 4200000;
+float const k = 1.0; // distance between two sensors
 
 
-int testing =0;
-
-int counter = 0;
 
 // bool isPresent=0; // this will be set to whetever is returned by the sensors
 
@@ -120,8 +109,6 @@ const uint32_t interval = 0.010; // this will be changed to match the clock
 uint32_t numTicks= 0; // 1 tick = 1 us
 
 
-// when adding a number into array, do we initialize everytime it is full?
-const int intervalFactor = 12;
 
 // local array for mean vel calculation
 // how many entries do we want? how often do we calculate the velocity
@@ -138,16 +125,6 @@ const int intervalFactor = 12;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
-
-	// +++++++++++++++++++++++++++
-	// move this code to initialize state
-	/*
-	const int intervalFactor = 12;
-	float xArray[intervalFactor]={}; // 12 => every 0.6 seconds
-	float velArray[intervalFactor-1]={}; // every 0.6 seconds we calculate velocity
-	*/
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -181,15 +158,205 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
 
+  float preX=0;
+  float curX=0;
+
+  float preY=0;
+  float curY=0;
+
+  float const interval= 0.01*timemultipler;
+
+  float deltaX=0;
+
+  float aveVel=0;
+
+  int velStage=0;
+  int lightStage=0;
+  int timer = 0;
+
+  int index=0;
+  float xArray[10]={}; // 12 => every 0.6 seconds
+  float velArray[9]={}; // every 0.6 seconds we calculate velocity
+
+
+  uint16_t peopleCounter=0;
+
+  bool isPresent = false;
+
   // 1 tick = 1 us
   while (1)
   {
-	  // MeasureDistance(1);
-	  /*
-	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)==GPIO_PIN_SET){ // when detecting people
+
+	  timer++;
+	  isPresent = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10); // when detecting people
+	  ////////////Test 1///////////
+//	  HAL_Delay(500);
+//
+//	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+//
+//	  testing_d_1 = MeasureDistance(1);
+//	  if (testing_d_1 > 15){
+//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+//		  HAL_Delay(3000);
+//	  }
+
+
+
+	  ////////////Testing2/////////
+//
+//	  HAL_Delay(500);
+//
+//	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+//
+//	  testing_d_2 = MeasureDistance(2);
+//	  if (testing_d_2 > 15){
+//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+//		  HAL_Delay(3000);
+//	  }
+//
+
+
+
+
+	  ////////////Testing3/////////
+	  // stage machine to calculate average velocity
+
+	  if (isPresent){
+		  switch(velStage) {
+		    case 0:
+		      preX = MeasureDistance(1);
+			  preY = MeasureDistance(2);
+
+			  ///////// needs to be fixed
+			  if (timer>interval&&timer<2*interval){ // every 0.01 seconds;
+				  velStage++;
+				  timer=0;
+			      break;
+			  }else if (timer > 2*interval){ // in case missing some cycle
+				  timer = interval;
+			  }
+
+		    case 1:
+			  curX = MeasureDistance(1);
+			  curY = MeasureDistance(2);
+			  break;
+
+		    case 2:
+		    	deltaX=trigMeasurement(preX, curX, preY, curY); //dX
+		    	curX=preX;
+		    	curY=preY;
+		    	velStage++;
+		    	break;
+
+		    case 3: // add instant x to array
+				xArray[index] = deltaX; // dX
+				index++;
+				velStage=0;
+
+				if (index==10){
+					velStage=4;
+					index=0;
+					break;
+				}
+
+		    case 4: // add vel to the array
+		    	velArray[index]= (xArray[index+1]-xArray[index])/(interval);// calculate dV; derivative
+		    	index++;
+
+		    	if (index==9){
+		    		velStage++;
+		    		index=0;
+		    		break;
+		    	}
+
+
+		    case 5:
+		    	aveVel = AveVel(velArray);
+		    	velStage++;
+		    	break;
+		  }
+
+
+
+		  // is there a better way to determine if the person has enter?
+		  // light state machine to turn off the light
+		  if (aveVel<0){ // leaving the door
+			  switch(lightStage) {
+			    case 0:
+			    	if (MeasureDistance(3)>30){	 // this should give the third distance
+			    		peopleCounter--;
+			    		// update LCD
+			    		lightStage++;
+			    		break;
+			    	}
+			    	break;
+
+			    case 1:
+			    	if(peopleCounter>0){
+			    		lightStage=0;
+			    		break;
+			    	}else{
+			    		// turn the light off
+			    		peopleCounter=0;
+			    		lightStage=0;
+			    		break;
+			    	}
+
+
+			  }
+		  }else{ // approaching the door
+				if (MeasureDistance(3)<30.0){	 // this should give the third distance
+					peopleCounter++;
+					// Update LCD
+					lightStage=0;
+					if (peopleCounter>0){
+						// turn on the light
+						// update LCD
+
+					}
+				}
+		  }
+
 
 	  }
+
+
+
+
+
+
+
+
+
+
+	  //
+
+
+
+
+	  // HAL_Delay(150);
+
+
+	  // HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+
+	  // testing_d_2 = MeasureDistance(2);
+	  //if (testing_d_2 > 10){
+//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+//		  HAL_Delay(3000);
+//	  }
+
+
+
+
+	  /*
+
 	  */
+
+
+
+
+
+
 
 
 /*
@@ -201,14 +368,6 @@ int main(void)
 	  }
 */
 
-	  usDelay(100000);
-
-	  if (counter>10000000){
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-		  counter=0;
-	  }
-
-	  counter++;
 
 
 
@@ -415,7 +574,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LED_Pin|Ext_LED_Pin|TRIG_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED_Pin|ECHO2_Pin|TRIG1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -423,24 +582,24 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_Pin Ext_LED_Pin TRIG_Pin */
-  GPIO_InitStruct.Pin = LED_Pin|Ext_LED_Pin|TRIG_Pin;
+  /*Configure GPIO pins : LED_Pin ECHO2_Pin TRIG1_Pin */
+  GPIO_InitStruct.Pin = LED_Pin|ECHO2_Pin|TRIG1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  /*Configure GPIO pin : TRIG2_Pin */
+  GPIO_InitStruct.Pin = TRIG2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(TRIG2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ECHO_Pin */
-  GPIO_InitStruct.Pin = ECHO_Pin;
+  /*Configure GPIO pin : ECHO2C9_Pin */
+  GPIO_InitStruct.Pin = ECHO2C9_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(ECHO_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(ECHO2C9_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PIR_Pin */
   GPIO_InitStruct.Pin = PIR_Pin;
@@ -473,8 +632,6 @@ void usDelay(uint32_t uSec)
 float MeasureDistance(int sensorID){
 	float localDistance=0;
 	if (sensorID == 1){
-		HAL_Delay(300);
-
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
 		usDelay(3);
 
@@ -502,9 +659,7 @@ float MeasureDistance(int sensorID){
 		return localDistance;
 	}
 
-	if (sensorID ==2){
-		HAL_Delay(300);
-
+	if (sensorID == 2){
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
 		usDelay(3);
 
@@ -519,7 +674,7 @@ float MeasureDistance(int sensorID){
 
 		//3. Start measuring ECHO pulse width in usec
 		numTicks = 0;
-		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9) == GPIO_PIN_SET)
+		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7) == GPIO_PIN_SET)
 		{
 			numTicks++;
 			usDelay(2); //2.8usec
@@ -528,10 +683,6 @@ float MeasureDistance(int sensorID){
 
 		localDistance = (numTicks + 0.0f)*2.8*speedOfSound; // Speed of sound is already divided by 2 here.
 
-		if(localDistance > 20){
-			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-			HAL_Delay(3000);
-		}
 
 		return localDistance;
 	}
@@ -562,70 +713,60 @@ float MeasureDistance(int sensorID){
 
 
 
-void trigMeasurement(float preX, float curX, float preY, float curY){
+float trigMeasurement(float preX, float curX, float preY, float curY){
 	// k is the distance between two sensors pair
 	//+++++++++++++++++++++++++++++++++++++++++++++
-	pre_data = -((preX*preX)-(preY*preY)-(k*k))/(preY*k);
-	delta = acos(pre_data);
-	preDistance = preY*cos(delta);
+	float local_deltaX=0;
+	float preDistance=0;
+	float curDistance=0;
+	float preData=0;
+	float curData=0;
+	float delta1=0;
+	float delta2=0;
 
 
-	cur_data = -((curX*curX)-(curY*curY)-(k*k))/(curY*k);
-	sigma = acos(cur_data);
-	curDistance = curY*cos(sigma);
+	preData = -((preX*preX)-(preY*preY)-(k*k))/(preY*k);
+	delta1 = acos(preData);
+	preDistance = preY*cos(delta1);
+
+
+	curData = -((curX*curX)-(curY*curY)-(k*k))/(curY*k);
+	delta2 = acos(curData);
+	curDistance = curY*cos(delta2);
 
 	// calculate delta x
-	deltaX = curDistance - preDistance;
+	local_deltaX = curDistance - preDistance;
+
+	return local_deltaX;
+
+}
+
+
+
+
+
+// this function will calculate the average velocity of an object over an interval
+float AveVel(float velArray[]){ // size 9
+
+	float sum=0;
+	float aveVel=0;
+	for (int i=0; i<9;i++){
+		sum += velArray[i];
+	}
+
+	aveVel = sum/(interval*10); // mean value
+	return aveVel;
+
+
+
+
 
 	//+++++++++++++++++++++++++++++++++++++++++++++
-	if (counter < intervalFactor){ // aka cap of array
-		// xArray[counter]=deltaX;
-	}else{
-		counter ++; //reset after reaching max;
-	}
-	// this will update the global vel variable;
-	vel = deltaX/interval; //
-
-	curX = preX;
-	curY = preY;
-
-	counter++;
+	// Problem is that first time some entries are still at their default values
+	// float velArray[i]=(xArray[i+1]-xArray[i])/interval; // this is the idea of derivative where lim(f(x+h)-f(x))/h as h which is our interval approaches 0
 }
 
 
-
-
-/*
-// this function will calculate the average velocity of an object over an interval
-void AveVel(float displacement){
-//	numTicks++;
-//	integral_x += displacement; // this will keep summing up the dx
-//	if(numTicks>=interval){
-//		aveVel=interal_x/interval;
-//		numTicks=0;
-//	}
-
-	for (int i=0;i<intervalFactor; i++){
-
-
-		//+++++++++++++++++++++++++++++++++++++++++++++
-		// Problem is that first time some entries are still at their default values
-		// float velArray[i]=(xArray[i+1]-xArray[i])/interval; // this is the idea of derivative where lim(f(x+h)-f(x))/h as h which is our interval approaches 0
-
-		if (i==intervalFactor-1){
-			int totalVel=0;
-
-			for (int k=0;k<intervalFactor-1;k++){
-				// totalVel+=velArray[k]; // sum all the velocity
-				// velArray[k]=0; // no longer used
-
-				//+++++++++++++++++++++++++++++++++++++++++++++
-				aveVel = totalVel/(interval*intervalFactor); // implementation of mean // do we need to multiply by a intervalFactor?
-			}
-		}
-	}
-}
-*/
 
 
 
