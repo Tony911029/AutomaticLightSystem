@@ -69,16 +69,22 @@ void Error_Handler(void);
 #define TRIG2_GPIO_Port GPIOA
 #define ECHO2_Pin GPIO_PIN_7
 #define ECHO2_GPIO_Port GPIOA
-#define ECHO2C9_Pin GPIO_PIN_9
-#define ECHO2C9_GPIO_Port GPIOC
+#define ECHO2B10_Pin GPIO_PIN_10
+#define ECHO2B10_GPIO_Port GPIOB
 #define TRIG1_Pin GPIO_PIN_8
 #define TRIG1_GPIO_Port GPIOA
+#define ECHO1_Pin GPIO_PIN_9
+#define ECHO1_GPIO_Port GPIOA
 #define PIR_Pin GPIO_PIN_10
 #define PIR_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
+#define RELAY_Pin GPIO_PIN_3
+#define RELAY_GPIO_Port GPIOB
+#define TRIG2B4_Pin GPIO_PIN_4
+#define TRIG2B4_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
