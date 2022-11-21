@@ -34,34 +34,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := Nucleo-F401RE-ECE198
+BUILD_ARTIFACT_NAME := AutomaticLightSystem
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-Nucleo-F401RE-ECE198.elf \
+AutomaticLightSystem.elf \
 
 MAP_FILES += \
-Nucleo-F401RE-ECE198.map \
+AutomaticLightSystem.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-Nucleo-F401RE-ECE198.list \
+AutomaticLightSystem.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: Nucleo-F401RE-ECE198.elf secondary-outputs
+main-build: AutomaticLightSystem.elf secondary-outputs
 
 # Tool invocations
-Nucleo-F401RE-ECE198.elf Nucleo-F401RE-ECE198.map: $(OBJS) $(USER_OBJS) /Users/tonychan/STM32CubeIDE/workspace_1.10.1/Nucleo-F401RE-ECE198/STM32F401RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Nucleo-F401RE-ECE198.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/tonychan/STM32CubeIDE/workspace_1.10.1/Nucleo-F401RE-ECE198/STM32F401RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Nucleo-F401RE-ECE198.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+AutomaticLightSystem.elf AutomaticLightSystem.map: $(OBJS) $(USER_OBJS) /Users/matteocamazzola/STM32CubeIDE/workspace_1.10.1/AutomaticLightSystem/STM32F401RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "AutomaticLightSystem.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/matteocamazzola/STM32CubeIDE/workspace_1.10.1/AutomaticLightSystem/STM32F401RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="AutomaticLightSystem.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -70,14 +70,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Nucleo-F401RE-ECE198.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Nucleo-F401RE-ECE198.list"
+AutomaticLightSystem.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "AutomaticLightSystem.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) Nucleo-F401RE-ECE198.elf Nucleo-F401RE-ECE198.list Nucleo-F401RE-ECE198.map default.size.stdout
+	-$(RM) AutomaticLightSystem.elf AutomaticLightSystem.list AutomaticLightSystem.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
