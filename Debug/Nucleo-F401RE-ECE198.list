@@ -35,15 +35,15 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  15 .debug_ranges 00000af8  00000000  00000000  0002e778  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  000162f5  00000000  00000000  0002f270  2**0
+ 16 .debug_macro  000162dd  00000000  00000000  0002f270  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0000caed  00000000  00000000  00045565  2**0
+ 17 .debug_line   0000caed  00000000  00000000  0004554d  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    0008db22  00000000  00000000  00052052  2**0
+ 18 .debug_str    0008dac2  00000000  00000000  0005203a  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000050  00000000  00000000  000dfb74  2**0
+ 19 .comment      00000050  00000000  00000000  000dfafc  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  000031f4  00000000  00000000  000dfbc4  2**2
+ 20 .debug_frame  000031f4  00000000  00000000  000dfb4c  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1176,8 +1176,8 @@ int main(void)
 //	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_10);
 
 
-	  testingdistance = MeasureDistance(1);
- 8000de4:	2001      	movs	r0, #1
+	  testingdistance = MeasureDistance(2);
+ 8000de4:	2002      	movs	r0, #2
  8000de6:	f000 fa3b 	bl	8001260 <MeasureDistance>
  8000dea:	eef0 7a40 	vmov.f32	s15, s0
  8000dee:	eefd 7ae7 	vcvt.s32.f32	s15, s15
@@ -1717,14 +1717,14 @@ static void MX_GPIO_Init(void)
  8001120:	687b      	ldr	r3, [r7, #4]
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LED_Pin|ECHO2_Pin|TRIG1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED_Pin|TRIG1_Pin, GPIO_PIN_RESET);
  8001122:	2200      	movs	r2, #0
- 8001124:	f44f 71d0 	mov.w	r1, #416	; 0x1a0
+ 8001124:	f44f 7190 	mov.w	r1, #288	; 0x120
  8001128:	4830      	ldr	r0, [pc, #192]	; (80011ec <MX_GPIO_Init+0x150>)
  800112a:	f000 fda7 	bl	8001c7c <HAL_GPIO_WritePin>
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, RELAY_Pin|TRIG2B4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, RELAY_Pin|TRIG2_Pin, GPIO_PIN_RESET);
  800112e:	2200      	movs	r2, #0
  8001130:	2118      	movs	r1, #24
  8001132:	482f      	ldr	r0, [pc, #188]	; (80011f0 <MX_GPIO_Init+0x154>)
@@ -1746,9 +1746,9 @@ static void MX_GPIO_Init(void)
  800114e:	4829      	ldr	r0, [pc, #164]	; (80011f4 <MX_GPIO_Init+0x158>)
  8001150:	f000 fbf8 	bl	8001944 <HAL_GPIO_Init>
 
-  /*Configure GPIO pins : LED_Pin ECHO2_Pin TRIG1_Pin */
-  GPIO_InitStruct.Pin = LED_Pin|ECHO2_Pin|TRIG1_Pin;
- 8001154:	f44f 73d0 	mov.w	r3, #416	; 0x1a0
+  /*Configure GPIO pins : LED_Pin TRIG1_Pin */
+  GPIO_InitStruct.Pin = LED_Pin|TRIG1_Pin;
+ 8001154:	f44f 7390 	mov.w	r3, #288	; 0x120
  8001158:	617b      	str	r3, [r7, #20]
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
  800115a:	2301      	movs	r3, #1
@@ -1765,9 +1765,9 @@ static void MX_GPIO_Init(void)
  800116c:	481f      	ldr	r0, [pc, #124]	; (80011ec <MX_GPIO_Init+0x150>)
  800116e:	f000 fbe9 	bl	8001944 <HAL_GPIO_Init>
 
-  /*Configure GPIO pins : TRIG2_Pin ECHO1_Pin */
-  GPIO_InitStruct.Pin = TRIG2_Pin|ECHO1_Pin;
- 8001172:	f44f 7310 	mov.w	r3, #576	; 0x240
+  /*Configure GPIO pin : ECHO2_Pin */
+  GPIO_InitStruct.Pin = ECHO2_Pin;
+ 8001172:	f44f 6380 	mov.w	r3, #1024	; 0x400
  8001176:	617b      	str	r3, [r7, #20]
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
  8001178:	2300      	movs	r3, #0
@@ -1775,15 +1775,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
  800117c:	2300      	movs	r3, #0
  800117e:	61fb      	str	r3, [r7, #28]
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(ECHO2_GPIO_Port, &GPIO_InitStruct);
  8001180:	f107 0314 	add.w	r3, r7, #20
  8001184:	4619      	mov	r1, r3
- 8001186:	4819      	ldr	r0, [pc, #100]	; (80011ec <MX_GPIO_Init+0x150>)
+ 8001186:	481a      	ldr	r0, [pc, #104]	; (80011f0 <MX_GPIO_Init+0x154>)
  8001188:	f000 fbdc 	bl	8001944 <HAL_GPIO_Init>
 
-  /*Configure GPIO pin : ECHO2B10_Pin */
-  GPIO_InitStruct.Pin = ECHO2B10_Pin;
- 800118c:	f44f 6380 	mov.w	r3, #1024	; 0x400
+  /*Configure GPIO pin : ECHO1_Pin */
+  GPIO_InitStruct.Pin = ECHO1_Pin;
+ 800118c:	f44f 7300 	mov.w	r3, #512	; 0x200
  8001190:	617b      	str	r3, [r7, #20]
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
  8001192:	2300      	movs	r3, #0
@@ -1791,10 +1791,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
  8001196:	2300      	movs	r3, #0
  8001198:	61fb      	str	r3, [r7, #28]
-  HAL_GPIO_Init(ECHO2B10_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(ECHO1_GPIO_Port, &GPIO_InitStruct);
  800119a:	f107 0314 	add.w	r3, r7, #20
  800119e:	4619      	mov	r1, r3
- 80011a0:	4813      	ldr	r0, [pc, #76]	; (80011f0 <MX_GPIO_Init+0x154>)
+ 80011a0:	4812      	ldr	r0, [pc, #72]	; (80011ec <MX_GPIO_Init+0x150>)
  80011a2:	f000 fbcf 	bl	8001944 <HAL_GPIO_Init>
 
   /*Configure GPIO pin : PIR_Pin */
@@ -1813,8 +1813,8 @@ static void MX_GPIO_Init(void)
  80011bc:	480b      	ldr	r0, [pc, #44]	; (80011ec <MX_GPIO_Init+0x150>)
  80011be:	f000 fbc1 	bl	8001944 <HAL_GPIO_Init>
 
-  /*Configure GPIO pins : RELAY_Pin TRIG2B4_Pin */
-  GPIO_InitStruct.Pin = RELAY_Pin|TRIG2B4_Pin;
+  /*Configure GPIO pins : RELAY_Pin TRIG2_Pin */
+  GPIO_InitStruct.Pin = RELAY_Pin|TRIG2_Pin;
  80011c2:	2318      	movs	r3, #24
  80011c4:	617b      	str	r3, [r7, #20]
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;

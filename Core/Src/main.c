@@ -200,7 +200,7 @@ int main(void)
 //	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_10);
 
 
-	  testingdistance = MeasureDistance(1);
+	  testingdistance = MeasureDistance(2);
 	  if (testingdistance > 15){
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
@@ -589,10 +589,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LED_Pin|ECHO2_Pin|TRIG1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED_Pin|TRIG1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, RELAY_Pin|TRIG2B4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, RELAY_Pin|TRIG2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -600,24 +600,24 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_Pin ECHO2_Pin TRIG1_Pin */
-  GPIO_InitStruct.Pin = LED_Pin|ECHO2_Pin|TRIG1_Pin;
+  /*Configure GPIO pins : LED_Pin TRIG1_Pin */
+  GPIO_InitStruct.Pin = LED_Pin|TRIG1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : TRIG2_Pin ECHO1_Pin */
-  GPIO_InitStruct.Pin = TRIG2_Pin|ECHO1_Pin;
+  /*Configure GPIO pin : ECHO2_Pin */
+  GPIO_InitStruct.Pin = ECHO2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(ECHO2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ECHO2B10_Pin */
-  GPIO_InitStruct.Pin = ECHO2B10_Pin;
+  /*Configure GPIO pin : ECHO1_Pin */
+  GPIO_InitStruct.Pin = ECHO1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(ECHO2B10_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(ECHO1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PIR_Pin */
   GPIO_InitStruct.Pin = PIR_Pin;
@@ -625,8 +625,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(PIR_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : RELAY_Pin TRIG2B4_Pin */
-  GPIO_InitStruct.Pin = RELAY_Pin|TRIG2B4_Pin;
+  /*Configure GPIO pins : RELAY_Pin TRIG2_Pin */
+  GPIO_InitStruct.Pin = RELAY_Pin|TRIG2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
