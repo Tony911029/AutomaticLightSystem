@@ -181,12 +181,14 @@ int main(void)
 
   uint16_t peopleCounter=0;
 
+  bool isPresent = false;
+
   // 1 tick = 1 us
   while (1)
   {
 
 	  timer++;
-
+	  isPresent = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10); // when detecting people
 	  ////////////Test 1///////////
 //	  HAL_Delay(500);
 //
@@ -219,89 +221,107 @@ int main(void)
 	  ////////////Testing3/////////
 	  // stage machine to calculate average velocity
 
-	  switch(velStage) {
-	    case 0:
-	      preX = MeasureDistance(1);
-		  preY = MeasureDistance(2);
-		  if (timer>interval){ // every 0.01 seconds;
-			  velStage++;
-			  timer=0;
-		      break;
-		  }
-
-	    case 1:
-		  curX = MeasureDistance(1);
-		  curY = MeasureDistance(2);
-		  break;
-
-	    case 2:
-	    	deltaX=trigMeasurement(preX, curX, preY, curY); //dX
-	    	curX=preX;
-	    	curY=preY;
-	    	velStage++;
-	    	break;
-
-	    case 3: // add instant x to array
-			xArray[index] = deltaX; // dX
-			index++;
-			velStage=0;
-
-			if (index==10){
-				velStage=4;
-				index=0;
-				break;
-			}
-
-	    case 4: // add vel to the array
-	    	velArray[index]= (xArray[index+1]-xArray[index])/(interval);// calculate dV; derivative
-	    	index++;
-
-	    	if (index==9){
-	    		velStage++;
-	    		index=0;
-	    		break;
-	    	}
-
-
-	    case 5:
-	    	aveVel = AveVel(velArray);
-	    	velStage++;
-	    	break;
-	  }
-
-
-
-	  // is there a better way to determine if the person has enter?
-	  // light state machine to turn off the light
-	  if (aveVel<0){ // leaving the door
-		  switch(lightStage) {
+	  if (isPresent){
+		  switch(velStage) {
 		    case 0:
-		    	if (MeasureDistance(3)>30){	 // this should give the third distance
-		    		peopleCounter--;
-		    		lightStage++;
-		    		break;
-		    	}
-		    	break;
+		      preX = MeasureDistance(1);
+			  preY = MeasureDistance(2);
+
+			  ///////// needs to be fixed
+			  if (timer>interval&&timer<2*interval){ // every 0.01 seconds;
+				  velStage++;
+				  timer=0;
+			      break;
+			  }else if (timer > 2*interval){ // in case missing some cycle
+				  timer = interval;
+			  }
 
 		    case 1:
-		    	if(peopleCounter>0){
-		    		lightStage=0;
-		    		break;
-		    	}else{
-		    		// turn the light off
-		    		peopleCounter=0;
-		    		lightStage=0;
+			  curX = MeasureDistance(1);
+			  curY = MeasureDistance(2);
+			  break;
+
+		    case 2:
+		    	deltaX=trigMeasurement(preX, curX, preY, curY); //dX
+		    	curX=preX;
+		    	curY=preY;
+		    	velStage++;
+		    	break;
+
+		    case 3: // add instant x to array
+				xArray[index] = deltaX; // dX
+				index++;
+				velStage=0;
+
+				if (index==10){
+					velStage=4;
+					index=0;
+					break;
+				}
+
+		    case 4: // add vel to the array
+		    	velArray[index]= (xArray[index+1]-xArray[index])/(interval);// calculate dV; derivative
+		    	index++;
+
+		    	if (index==9){
+		    		velStage++;
+		    		index=0;
 		    		break;
 		    	}
 
 
+		    case 5:
+		    	aveVel = AveVel(velArray);
+		    	velStage++;
+		    	break;
 		  }
-	  }else{ // approaching the door
-			if (MeasureDistance(3)<30.0){	 // this should give the third distance
-				peopleCounter++;
-				lightStage=0;
-			}
+
+
+
+		  // is there a better way to determine if the person has enter?
+		  // light state machine to turn off the light
+		  if (aveVel<0){ // leaving the door
+			  switch(lightStage) {
+			    case 0:
+			    	if (MeasureDistance(3)>30){	 // this should give the third distance
+			    		peopleCounter--;
+			    		// update LCD
+			    		lightStage++;
+			    		break;
+			    	}
+			    	break;
+
+			    case 1:
+			    	if(peopleCounter>0){
+			    		lightStage=0;
+			    		break;
+			    	}else{
+			    		// turn the light off
+			    		peopleCounter=0;
+			    		lightStage=0;
+			    		break;
+			    	}
+
+
+			  }
+		  }else{ // approaching the door
+				if (MeasureDistance(3)<30.0){	 // this should give the third distance
+					peopleCounter++;
+					// Update LCD
+					lightStage=0;
+					if (peopleCounter>0){
+						// turn on the light
+						// update LCD
+
+					}
+				}
+		  }
+
+
 	  }
+
+
+
 
 
 
@@ -329,9 +349,7 @@ int main(void)
 
 
 	  /*
-	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)==GPIO_PIN_SET){ // when detecting people
 
-	  }
 	  */
 
 
