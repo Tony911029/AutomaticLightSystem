@@ -189,6 +189,7 @@ int main(void)
 
 
   int testingdistance=0;
+  int testingdistance1=0;
 
   // 1 tick = 1 us
   while (1)
@@ -341,6 +342,33 @@ int main(void)
 
 
 	  }*/
+
+
+
+	  ////////////Testing5/////////
+	  testingdistance = MeasureDistance(1);
+	  if (testingdistance < 30){ // 15 cms
+		  peopleCounter++;
+	  }
+
+
+	  testingdistance1 = MeasureDistance(2);
+	  if (testingdistance < 30){  // 15 cms
+		  peopleCounter--;
+	  }
+
+
+	  if (peopleCounter==0){
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+	  }else{
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
+	  }
+
+
+
+
+
+
 
 
 
